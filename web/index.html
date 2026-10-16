@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2418">
+  <meta name="description" content="Six-deck blackjack: 3:2 blackjack, dealer stands on all 17s, double, split, insurance and basic strategy hints.">
+  <title>Blackjack</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23116b3f'/%3E%3Ctext x='50' y='72' font-size='64' text-anchor='middle' fill='white'%3E%E2%99%A0%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1 class="brand"><span class="brand-suit" aria-hidden="true">♠&#xFE0E;</span>Blackjack</h1>
+
+      <div class="bank" aria-live="polite">
+        <div class="pill">
+          <span class="pill-label">Balance</span>
+          <span class="pill-value" id="balance">$1,000</span>
+        </div>
+        <div class="pill">
+          <span class="pill-label">Bet</span>
+          <span class="pill-value" id="bet">$0</span>
+        </div>
+      </div>
+
+      <div class="tools">
+        <button class="tool" id="btn-hint" type="button" aria-pressed="false" title="Basic strategy hints">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"/></svg>
+          <span class="tool-label">Hints</span>
+        </button>
+        <button class="tool" id="btn-stats" type="button" title="Stats">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          <span class="tool-label">Stats</span>
+        </button>
+        <button class="tool" id="btn-mute" type="button" aria-pressed="false" title="Sound on/off (M)">
+          <svg class="ico-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+          <svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zM17 9l5 6M22 9l-5 6"/></svg>
+          <span class="tool-label">Sound</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="table" id="table">
+      <div class="shoe" id="shoe" title="Cards remaining in the shoe">
+        <div class="shoe-body"><div class="shoe-card"></div></div>
+        <div class="shoe-meter"><span id="shoe-fill"></span><i class="cut"></i></div>
+      </div>
+      <div class="discard" id="discard" aria-hidden="true"></div>
+
+      <section class="zone dealer-zone" aria-label="Dealer">
+        <div class="zone-head">
+          <span class="zone-name">Dealer</span>
+          <span class="total" id="dealer-total"></span>
+        </div>
+        <div class="cards" id="dealer-cards"></div>
+      </section>
+
+      <div class="middle">
+        <div class="felt-text" aria-hidden="true">
+          <div class="felt-main">Blackjack pays 3 to 2</div>
+          <div class="felt-sub">Dealer stands on all 17s · Insurance pays 2 to 1</div>
+        </div>
+        <div class="banner" id="banner" role="status" aria-live="polite" hidden>
+          <div class="banner-title" id="banner-title"></div>
+          <div class="banner-sub" id="banner-sub"></div>
+        </div>
+        <div class="toast" id="toast" hidden></div>
+      </div>
+
+      <section class="zone player-zone" aria-label="Your hands">
+        <div class="hands" id="hands"></div>
+        <div class="bet-spot" id="bet-spot">
+          <div class="chip-stack" id="bet-stack"></div>
+          <span class="bet-spot-label" id="bet-spot-label">Place your bet</span>
+        </div>
+      </section>
+
+    </main>
+
+    <div class="hint" id="hint" hidden></div>
+
+    <footer class="controls">
+      <!-- Betting -->
+      <div class="ctl" id="ctl-bet">
+        <div class="chip-rack" role="group" aria-label="Add chips">
+          <button class="chip chip-5" type="button" data-chip="5" aria-label="Add $5"><span>5</span></button>
+          <button class="chip chip-25" type="button" data-chip="25" aria-label="Add $25"><span>25</span></button>
+          <button class="chip chip-100" type="button" data-chip="100" aria-label="Add $100"><span>100</span></button>
+          <button class="chip chip-500" type="button" data-chip="500" aria-label="Add $500"><span>500</span></button>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="btn-clear" type="button">Clear <kbd>C</kbd></button>
+          <button class="btn btn-ghost" id="btn-rebet" type="button">Rebet <kbd>R</kbd></button>
+          <button class="btn btn-primary" id="btn-deal" type="button">Deal <kbd>↵</kbd></button>
+          <button class="btn btn-gold" id="btn-rebuy" type="button" hidden>Rebuy $1,000</button>
+        </div>
+      </div>
+
+      <!-- Player decisions -->
+      <div class="ctl" id="ctl-play" hidden>
+        <div class="btn-row btn-row-4">
+          <button class="btn btn-action" id="btn-hit" type="button" data-act="H">Hit <kbd>H</kbd></button>
+          <button class="btn btn-action" id="btn-stand" type="button" data-act="S">Stand <kbd>S</kbd></button>
+          <button class="btn btn-action" id="btn-double" type="button" data-act="D">Double <kbd>D</kbd></button>
+          <button class="btn btn-action" id="btn-split" type="button" data-act="P">Split <kbd>P</kbd></button>
+        </div>
+      </div>
+
+      <!-- Insurance -->
+      <div class="ctl" id="ctl-ins" hidden>
+        <p class="ins-q" id="ins-q">Insurance?</p>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="btn-ins-no" type="button">No thanks <kbd>N</kbd></button>
+          <button class="btn btn-primary" id="btn-ins-yes" type="button">Take it <kbd>Y</kbd></button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <div class="modal" id="stats-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="stats-title">
+      <div class="modal-head">
+        <h2 id="stats-title">Stats</h2>
+        <button class="tool tool-close" id="btn-stats-close" type="button" aria-label="Close">×</button>
+      </div>
+      <dl class="stats-grid" id="stats-grid"></dl>
+      <div class="modal-foot">
+        <p class="keys">Shortcuts: <kbd>H</kbd> hit · <kbd>S</kbd> stand · <kbd>D</kbd> double · <kbd>P</kbd> split · <kbd>Y</kbd>/<kbd>N</kbd> insurance · <kbd>1</kbd>–<kbd>4</kbd> chips · <kbd>↵</kbd> deal · <kbd>R</kbd> rebet · <kbd>C</kbd> clear · <kbd>M</kbd> mute</p>
+        <button class="btn btn-ghost btn-small" id="btn-reset-stats" type="button">Reset stats</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="engine.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
