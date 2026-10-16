@@ -478,6 +478,8 @@ kbd {
 .chip-25 { --c: #128a4b; }
 .chip-100 { --c: #1c1c22; --edge: #e8c46a; }
 .chip-500 { --c: #6b2fa3; --edge: #f2d98c; }
+.chip-allin { --c: #c9971f; --edge: #2a1a00; color: #2a1a00; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35); font-size: 0.72rem; line-height: 1; letter-spacing: 0.04em; }
+.chip-allin::after { border-color: rgba(42, 26, 0, 0.45); }
 button.chip:hover:not(:disabled) { transform: translateY(-3px); }
 button.chip:active:not(:disabled) { transform: translateY(1px) scale(0.96); }
 button.chip:disabled { opacity: 0.35; filter: grayscale(0.6); }

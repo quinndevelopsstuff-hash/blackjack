@@ -144,6 +144,7 @@
     ctlIns: $('#ctl-ins'),
     insQ: $('#ins-q'),
     chips: [...document.querySelectorAll('[data-chip]')],
+    allIn: $('#btn-allin'),
     clear: $('#btn-clear'),
     rebet: $('#btn-rebet'),
     deal: $('#btn-deal'),
@@ -494,6 +495,7 @@
     el.ctlPlay.hidden = !(ph === 'player' || ph === 'dealer');
 
     el.chips.forEach((b) => { b.disabled = busy || !game.canAddChip(Number(b.dataset.chip)); });
+    el.allIn.disabled = busy || !game.canAllIn();
     const broke = game.canRebuy();
     el.rebuy.hidden = !broke;
     el.clear.hidden = broke;
@@ -745,6 +747,17 @@
     flyChip(value, rect(btn), rect(el.betSpot)).then(() => renderStack(tableStake()));
   }
 
+  function onAllIn() {
+    const amount = game.s.bankroll;
+    if (busy || !game.allIn()) return;
+    Sound.chip();
+    hideBanner();
+    persist();
+    updateHud({ stack: false });
+    updateControls();
+    flyChips(amount, rect(el.allIn), rect(el.betSpot)).then(() => renderStack(tableStake()));
+  }
+
   function onClear() {
     if (busy) return;
     const amount = game.s.bet;
@@ -823,6 +836,7 @@
   // ------------------------------------------------------------------ input
 
   el.chips.forEach((b) => b.addEventListener('click', () => onChip(Number(b.dataset.chip))));
+  el.allIn.addEventListener('click', onAllIn);
   el.clear.addEventListener('click', onClear);
   el.rebet.addEventListener('click', onRebet);
   el.deal.addEventListener('click', doDeal);
@@ -878,6 +892,7 @@
       case '1': case '2': case '3': case '4':
         onChip(RULES.chips[Number(k) - 1]);
         break;
+      case 'a': case '5': onAllIn(); break;
       case 'm': toggleMute(); break;
       default: return;
     }

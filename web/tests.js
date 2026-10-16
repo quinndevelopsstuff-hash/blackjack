@@ -269,6 +269,16 @@ test('betting: chips, clear, rebet, rebuy', () => {
   g.rebuy();
   eq(g.s.bankroll, 1000);
 });
+test('all in: whole balance goes on the bet, even odd amounts', () => {
+  const g = new Game();
+  g.s.bankroll = 937.5;
+  g.addChip(25);
+  eq(g.allIn(), true);
+  eq([g.s.bankroll, g.s.bet], [0, 937.5]);
+  eq(g.canAllIn(), false);
+  g.deal();
+  eq(g.canDouble(), false);                  // nothing left to double with
+});
 test('state survives a JSON round trip mid-round', () => {
   const g = stacked('8 6 8 10 3');
   g.split();

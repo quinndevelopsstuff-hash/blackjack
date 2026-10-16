@@ -242,6 +242,16 @@
       return true;
     }
 
+    canAllIn() { return this.s.phase === 'betting' && this.s.bankroll > 0; }
+
+    /** Push the entire remaining balance into the betting circle. */
+    allIn() {
+      if (!this.canAllIn()) return false;
+      this.s.bet += this.s.bankroll;
+      this.s.bankroll = 0;
+      return true;
+    }
+
     clearBet() {
       if (this.s.phase !== 'betting' || !this.s.bet) return false;
       this.s.bankroll += this.s.bet;
