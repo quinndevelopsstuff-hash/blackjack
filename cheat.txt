@@ -1,0 +1,136 @@
+==============================================================================
+                     BLACKJACK - DEVELOPER CHEAT SHEET
+==============================================================================
+
+  An educational tour of the game's internals. Everything here pokes at the
+  live state exposed as `window.blackjack` (see web/game.js); the rules and
+  money math live in web/engine.js.
+
+  HOW TO USE
+  ----------
+  1. Open the game in your browser.
+  2. Open DevTools:  F12  (or Cmd+Option+J on Mac / Ctrl+Shift+J on Windows)
+  3. Click the "Console" tab.
+  4. Paste a command and press Enter.
+
+  RULE OF THUMB: run cheats only while the table is idle (between rounds, or
+  while it's waiting for your move). If the screen gets out of sync, run:
+
+      blackjack.render({ instant: true })
+
+
+==============================================================================
+  1. MONEY
+==============================================================================
+
+  Set your balance (here: $1,000,000)
+  ----------------------------------------------------------------------------
+      blackjack.game.s.bankroll = 1e6; blackjack.render({ instant: true });
+
+  Add $10,000 to whatever you have
+  ----------------------------------------------------------------------------
+      blackjack.game.s.bankroll += 10000; blackjack.render({ instant: true });
+
+  TIP: pair with the ALL IN chip (or press A) for giant bets.
+
+
+==============================================================================
+  2. X-RAY VISION
+==============================================================================
+
+  See the next 6 cards coming out of the shoe (in deal order)
+  ----------------------------------------------------------------------------
+      blackjack.game.s.shoe.slice(-6).reverse().map(c => c.rank)
+
+  Peek at the dealer's hidden hole card (both dealer cards)
+  ----------------------------------------------------------------------------
+      blackjack.game.s.dealer.map(c => c.rank)
+
+  How many cards are left in the shoe
+  ----------------------------------------------------------------------------
+      blackjack.game.s.shoe.length
+
+
+==============================================================================
+  3. STACK THE DECK
+==============================================================================
+
+  Step 1 - define the helper (paste once per page load)
+  ----------------------------------------------------------------------------
+      const stack = (...ranks) => blackjack.game.s.shoe.push(
+        ...ranks.reverse().map(rank => ({ rank, suit: '♠' })));
+
+  Step 2 - stack cards BEFORE you press Deal.
+  Deal order is:  YOU, DEALER UP-CARD, YOU, DEALER HOLE CARD, then any hits.
+
+      stack('A', '6', 'K', '10')      // you: blackjack | dealer: 6 + 10 (16)
+
+  Ranks you can use:  A 2 3 4 5 6 7 8 9 10 J Q K
+
+  Handy setups
+  ----------------------------------------------------------------------------
+      stack('A','9','K','7')            // instant blackjack, pays 3:2
+      stack('6','6','5','10','10','10') // 11 vs dealer 16: double -> 21,
+                                        //   dealer hits -> busts
+      stack('8','6','8','10','3','10')  // pair of 8s to split, dealer 16
+
+  20 blackjacks in a row
+  ----------------------------------------------------------------------------
+      for (let i = 0; i < 20; i++) stack('A', '9', 'K', '7');
+
+
+==============================================================================
+  4. BEND THE RULES   (current tab only - a reload restores normal rules)
+==============================================================================
+
+  Blackjack pays 10:1 instead of 3:2
+  ----------------------------------------------------------------------------
+      blackjack.game.rules.blackjackPays = 10;
+
+  Insurance pays 50:1 instead of 2:1
+  ----------------------------------------------------------------------------
+      blackjack.game.rules.insurancePays = 50;
+
+  Rebuy gives $100,000 instead of $1,000
+  ----------------------------------------------------------------------------
+      blackjack.game.rules.startingBankroll = 100000;
+  (The Rebuy button's label still says $1,000; the amount is what changes.)
+
+
+==============================================================================
+  5. STATS
+==============================================================================
+
+  Fake a legendary record
+  ----------------------------------------------------------------------------
+      Object.assign(blackjack.game.s.stats,
+        { wins: 999, biggestWin: 50000, streak: 42, bestStreak: 42 });
+
+  Reset stats only (balance kept)
+  ----------------------------------------------------------------------------
+      blackjack.game.resetStats();
+
+
+==============================================================================
+  6. RESET EVERYTHING
+==============================================================================
+
+  Wipe the save and start over with $1,000
+  ----------------------------------------------------------------------------
+      localStorage.removeItem('blackjack.save.v1'); location.reload();
+
+
+==============================================================================
+  NOTES
+==============================================================================
+
+  * Saved: money, stats, and stacked cards. The game saves automatically after
+    your next action, so they survive a reload.
+  * Not saved: rule changes (section 4). They live only in the open tab.
+  * Stacked cards sit on top of the shoe. If a reshuffle triggers on the next
+    deal (fewer than 25% of cards left), the new shoe replaces them. Check
+    blackjack.game.s.shoe.length first; it needs to be 78 or more.
+  * Going ALL IN leaves $0, so Double / Split / Insurance are off that hand.
+    Give yourself extra bankroll first if you want those.
+
+==============================================================================
